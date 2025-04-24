@@ -5,4 +5,5 @@ openpyxl
 gym
 stable-baselines3[extra]
 gunicorn
-uvicorn
+uvicorn[standard]
+
