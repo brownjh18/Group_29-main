@@ -1,0 +1,6 @@
+flask
+pandas
+numpy
+openpyxl
+gym
+stable-baselines3[extra]

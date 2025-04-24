@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>BRD Prediction System</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background: url('https://source.unsplash.com/1600x900/?cattle,farm') no-repeat center center fixed;
+              background-size: cover;
+              text-align: center;
+              padding: 20px;
+          }
+          .container {
+              background: rgba(255, 255, 255, 0.9);
+              padding: 25px;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+              border-radius: 10px;
+              max-width: 600px;
+              margin: auto;
+              item
+          }
+          select, input[type="number"] {
+              width: 80%;
+              padding: 10px;
+              margin: 10px 5px;
+              border: 2px solid #ccc;
+              border-radius: 5px;
+              display: block;
+          }
+          button {
+              background: #007BFF;
+              color: white;
+              padding: 12px;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 16px;
+              width: 85%;
+              margin-top: 10px;
+          }
+          button:hover {
+              background: #0056b3;
+          }
+          #prediction, #train-status {
+              font-size: 20px;
+              font-weight: bold;
+              color: #007BFF;
+              margin-top: 20px;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>Bovine Respiratory Disease Prediction</h1>
+  
+          <h2>Upload Dataset for Training</h2>
+          <form id="train-form" action="/train" method="post" enctype="multipart/form-data">
+              <input type="file" name="file" required>
+              <button type="submit">Train Model</button>
+          </form>
+          <p id="train-status"></p>
+  
+          <h2>Enter Features for Prediction</h2>
+          <form id="predict-form">
+              <label>Gender:</label>
+              <select name="gender" required>
+                  <option value="0">Male</option>
+                  <option value="1">Female</option>
+              </select>
+              <label>Nasal Discharge:</label>
+              <select name="nasal" required>
+                  <option value="0">None</option>
+                  <option value="1">Normal</option>
+                  <option value="2">Worse</option>
+              </select>
+              <label>Eye Discharge:</label>
+              <select name="eye" required>
+                  <option value="0">None</option>
+                  <option value="1">Normal</option>
+                  <option value="2">Worse</option>
+              </select>
+              <label>Ears:</label>
+              <select name="ears" required>
+                  <option value="0">None</option>
+                  <option value="1">Normal</option>
+                  <option value="2">Worse</option>
+              </select>
+              <label>Cough:</label>
+              <select name="cough" required>
+                  <option value="0">None</option>
+                  <option value="1">Normal</option>
+                  <option value="2">Worse</option>
+              </select>
+              <label>Temperature Score:</label>
+              <input type="number" step="any" name="temp_score" required>
+              <label>Weight (kg):</label>
+              <input type="number" step="any" name="weight" required>
+              <label>Lying Bouts:</label>
+              <input type="number" step="any" name="lying_bouts" required>
+              <button type="submit">Predict</button>
+          </form>
+  
+          <p id="prediction"></p>
+      </div>
+  
+      <script>
+          document.getElementById("train-form").addEventListener("submit", function (event) {
+              event.preventDefault();
+              let formData = new FormData(this);
+              let statusText = document.getElementById("train-status");
+              statusText.innerText = "Training in progress...";
+              fetch('/train', {
+                  method: 'POST',
+                  body: formData
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.message) {
+                      statusText.innerText = "Model Trained";
+                  } else {
+                      statusText.innerText = "Error: " + data.error;
+                  }
+              })
+              .catch(error => {
+                  statusText.innerText = "Error: " + error;
+              });
+          });
+  
+          document.getElementById("predict-form").addEventListener("submit", function (event) {
+              event.preventDefault();
+              let formData = new FormData(this);
+              let values = [];
+              for (let pair of formData.entries()) {
+                  values.push(parseFloat(pair[1]));
+              }
+              // Pad the values to match 37 features (if fewer than 37 values are provided)
+            while (values.length < 37) {
+                values.push(0);  // You can use a different padding strategy if needed
+            }
+              fetch('/predict_manual', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ features: values })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.prediction) {
+                    // Update the prediction message on the page
+                    document.getElementById("prediction").innerText = "Prediction: " + data.prediction;
+                } else {
+                    document.getElementById("prediction").innerText = "Error: " + data.error;
+                }
+            })
+              .catch(error => {
+            document.getElementById("prediction").innerText = "Error: " + error;
+            });
+          });
+      </script>
+  </body>
+</html>
