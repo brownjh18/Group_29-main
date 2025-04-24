@@ -6,4 +6,4 @@ gym
 stable-baselines3[extra]
 gunicorn
 uvicorn[standard]
-
+shimmy>=2.0
